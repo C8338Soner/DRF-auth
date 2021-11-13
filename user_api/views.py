@@ -12,8 +12,19 @@ def registration_view(request):
         if serializer.is_valid():
          password = serializer.validated_data.get('password')
          serializer.validated_data['password'] = make_password(password)         
-         serializer.save()        
+         user = serializer.save()
+         token, _  = Token.objects.get_or_create(user=user)               
          data = serializer.data
+         data['token'] = token.key
         else:
             data = serializer.errors
         return Response(data)
+@api_view(['POST'])
+def logout_view(request):
+ if request.method == 'POST':
+  request.user.auth.token.delete()
+  data = {
+   'message': 'logout'
+  }
+  
+  return Response(data)
